@@ -1,12 +1,11 @@
 const EventEmitter = require('events');
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
-const State = require('./State');
 
 const IMU = (path) => {
   const eventEmitter = new EventEmitter();
 
-  let state = State.IDLE;
+  let doReset = false;
   let parser;
   let port;
 
@@ -37,33 +36,27 @@ const IMU = (path) => {
 
       parser.on('data', (data) => {
         try {
-          eventEmitter.emit('data', data);
+          if (!doReset) {
+            eventEmitter.emit('data', data);
+          }
         } catch(error) {}
       });
     });
   }
 
   /**
-   * 
-   * @param {String} newState
+   * Reset
+   * @return {Promise}
    */
-  function setState(newState) {
+  function reset() {
+    doReset = true;
+
     return new Promise((resolve) => {
-      switch (newState) {
-        case State.IDLE:
-          port.write('s0');
-          break;
-        case State.RESET:
-          port.write('s1');
-          break;
-        case State.HEADING:
-          port.write('s2');
-          break;
-      }
-
-      state = newState;
-
-      resolve();
+      port.write('s0');
+      setTimeout(() => {
+        doReset = false;
+        resolve();
+      }, 500);
     });
   }
 
@@ -77,7 +70,6 @@ const IMU = (path) => {
         eventEmitter.emit('error', error);
       }
 
-      state = State.IDLE;
       resolve();
     });
   }
@@ -86,7 +78,7 @@ const IMU = (path) => {
 
   return {
     init,
-    setState,
+    reset,
     on: eventEmitter.on.bind(eventEmitter),
   };
 };

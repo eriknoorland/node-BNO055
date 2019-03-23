@@ -1,12 +1,8 @@
 const IMU = require('../src/IMU');
-const imu = IMU('/dev/tty.usbserial-1420');
+const imu = IMU('<usb-port-name>');
 
 imu.on('data', (data) => {
   console.log(data);
 });
 
-imu
-  .init()
-  .then(() => {
-    imu.setState('heading');
-  });
+imu.init();
