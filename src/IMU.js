@@ -37,7 +37,7 @@ const IMU = (path) => {
       parser.on('data', (data) => {
         try {
           if (!doReset) {
-            eventEmitter.emit('data', data);
+            eventEmitter.emit('data', JSON.parse(data));
           }
         } catch(error) {}
       });
